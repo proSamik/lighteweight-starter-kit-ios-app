@@ -1,4 +1,4 @@
-# Lighter Starter Kit - iOS App
+# Lighter Starter Kit - iOS + Mac App using SwiftUI
 
 This comes with- 
 - 1/ Login using Apple and Google using Supabase
