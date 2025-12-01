@@ -18,6 +18,9 @@
 
 ## Project Overview: Follow this guide step-by-step
 
+## 0- Watch this Intro Video about this Starter Repo
+https://www.youtube.com/watch?v=81GiWxq-NSw
+
 ## 1- Setup Supabase Sign-in: Create new Supabase Project
 - Watch this YouTube video on how to setup public API Key for Supabase- https://www.youtube.com/watch?v=QEqOaOYHOYU&t=206s
 
