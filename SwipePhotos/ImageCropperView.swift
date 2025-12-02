@@ -354,7 +354,6 @@ struct ResizableCornerHandle: View {
                     }
 
                     // Calculate size change based on drag distance
-                    let dragDistance = sqrt(pow(value.translation.width, 2) + pow(value.translation.height, 2))
                     let multiplier: CGFloat = position == .topLeft || position == .bottomLeft ? -1 : 1
                     let sizeChange = (value.translation.width * multiplier + value.translation.height) / 2
 
