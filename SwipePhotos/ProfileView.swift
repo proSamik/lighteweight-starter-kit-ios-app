@@ -28,6 +28,8 @@ struct ProfileView: View {
     @State private var showImageCropper = false
     @State private var isLoadingImage = false
     @State private var showFullScreenImage = false
+    @State private var showDeleteAccountAlert = false
+    @State private var isDeletingAccount = false
 
     var body: some View {
         NavigationStack {
@@ -334,6 +336,24 @@ struct ProfileView: View {
                         }
                     }
                     .buttonStyle(.borderedProminent)
+
+                    // Delete Account Button
+                    Button("Delete Account") {
+                        showDeleteAccountAlert = true
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.red)
+                    .disabled(isDeletingAccount)
+
+                    if isDeletingAccount {
+                        HStack {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                            Text("Deleting account...")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
                 }
             }
@@ -391,6 +411,16 @@ struct ProfileView: View {
             } message: {
                 Text(securityAlertMessage)
             }
+            .alert("Delete Account", isPresented: $showDeleteAccountAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete", role: .destructive) {
+                    Task {
+                        await deleteAccount()
+                    }
+                }
+            } message: {
+                Text("Are you sure you want to delete your account? This will permanently delete all your data including photos, profile information, and settings. This action cannot be undone.")
+            }
         }
     }
 
@@ -418,7 +448,6 @@ struct ProfileView: View {
             isEditingName = false
         } catch {
             errorMessage = "Failed to update name: \(error.localizedDescription)"
-            print("Name update error: \(error)")
         }
         
         isSaving = false
@@ -459,11 +488,9 @@ struct ProfileView: View {
         } catch {
             // Don't show error message for session missing - it's expected after sign out
             if error.localizedDescription.contains("sessionMissing") || error.localizedDescription.contains("Auth session is missing") {
-                print("Profile fetch: No auth session (user likely signed out)")
                 profile = nil
             } else {
                 errorMessage = "Failed to load profile: \(error.localizedDescription)"
-                print("Profile fetch error: \(error)")
             }
         }
 
@@ -554,9 +581,6 @@ struct ProfileView: View {
             var oldImagePath: String?
             if let currentImageUrl = profile?.profileImageUrl {
                 oldImagePath = extractStoragePath(from: currentImageUrl)
-                if let path = oldImagePath {
-                    print("🗑️ Old image found (will delete after upload): \(path)")
-                }
             }
 
             // Compress the image to approximately 300KB
@@ -565,8 +589,6 @@ struct ProfileView: View {
                 isUploadingPhoto = false
                 return
             }
-
-            print("📦 Compressed image size: \(compressedData.count / 1024)KB")
 
             // Create a unique filename
             let fileName = "\(user.id.uuidString)/profile_\(UUID().uuidString).jpg"
@@ -589,10 +611,6 @@ struct ProfileView: View {
                 .from("profile-images")
                 .getPublicURL(path: fileName)
 
-            print("✅ Image uploaded successfully")
-            print("📁 File path: \(fileName)")
-            print("📸 Storage URL: \(publicURL.absoluteString)")
-
             // Store the URL in database (will be converted to signed URL on load)
             try await supabase
                 .from("profiles")
@@ -600,14 +618,10 @@ struct ProfileView: View {
                 .eq("id", value: user.id.uuidString)
                 .execute()
 
-            print("✅ Database updated with image URL")
-
             // Update local profile
             var updatedProfile = profile
             updatedProfile?.profileImageUrl = publicURL.absoluteString
             profile = updatedProfile
-
-            print("✅ Profile updated locally")
 
             // Delete old image from storage if it was a Supabase image
             if let oldPath = oldImagePath {
@@ -615,10 +629,7 @@ struct ProfileView: View {
                     try await supabase.storage
                         .from("profile-images")
                         .remove(paths: [oldPath])
-                    print("🗑️ Old image deleted: \(oldPath)")
                 } catch {
-                    // Don't fail the upload if deletion fails
-                    print("⚠️ Failed to delete old image: \(error.localizedDescription)")
                 }
             }
 
@@ -629,7 +640,6 @@ struct ProfileView: View {
 
         } catch {
             errorMessage = "Failed to upload photo: \(error.localizedDescription)"
-            print("Photo upload error: \(error)")
         }
 
         isUploadingPhoto = false
@@ -656,7 +666,6 @@ struct ProfileView: View {
             showImageCropper = true
         } catch {
             errorMessage = "Failed to load image: \(error.localizedDescription)"
-            print("Image load error: \(error)")
             isLoadingImage = false
         }
     }
@@ -717,33 +726,102 @@ struct ProfileView: View {
     /// Loads the profile image, generating a signed URL if it's a Supabase storage URL
     func loadProfileImage() async {
         guard let imageUrlString = profile?.profileImageUrl, !imageUrlString.isEmpty else {
-            print("⚠️ No profile image URL found")
             profileImageURL = nil
             return
         }
 
-        print("🔍 Loading image from: \(imageUrlString)")
-
         // Check if it's a Supabase storage URL
         if let storagePath = extractStoragePath(from: imageUrlString) {
             // It's a Supabase URL - generate a fresh signed URL
-            print("🔐 Detected Supabase URL, extracting path: \(storagePath)")
             do {
                 let signedURL = try await supabase.storage
                     .from("profile-images")
                     .createSignedURL(path: storagePath, expiresIn: 3600) // 1 hour
 
                 profileImageURL = signedURL
-                print("✅ Generated signed URL: \(signedURL.absoluteString)")
             } catch {
-                print("❌ Failed to generate signed URL: \(error)")
-                print("❌ Error details: \(error.localizedDescription)")
                 profileImageURL = nil
             }
         } else {
             // It's a regular public URL - use it directly
             profileImageURL = URL(string: imageUrlString)
-            print("📸 Using public URL directly: \(imageUrlString)")
         }
+    }
+
+    // MARK: - Account Deletion
+
+    /// Deletes the user's account and all associated data
+    func deleteAccount() async {
+        isDeletingAccount = true
+        errorMessage = nil
+
+        do {
+            // Get the current user
+            let user = try await supabase.auth.user()
+
+            // 1. Delete profile image from storage if it exists
+            if let imageUrlString = profile?.profileImageUrl,
+               let storagePath = extractStoragePath(from: imageUrlString) {
+                do {
+                    try await supabase.storage
+                        .from("profile-images")
+                        .remove(paths: [storagePath])
+                } catch {
+                    // Continue even if image deletion fails
+                    print("Failed to delete profile image: \(error.localizedDescription)")
+                }
+            }
+
+            // 2. Delete profile from database
+            // Note: If you have CASCADE delete configured in your database,
+            // this might automatically delete related records
+            do {
+                try await supabase
+                    .from("profiles")
+                    .delete()
+                    .eq("id", value: user.id.uuidString)
+                    .execute()
+            } catch {
+                print("Failed to delete profile: \(error.localizedDescription)")
+                // Continue to delete auth account anyway
+            }
+
+            // 3. Delete user data from RevenueCat
+            do {
+                try await revenueCatManager.deleteUser(appUserID: user.id.uuidString)
+            } catch {
+                print("Failed to delete RevenueCat data: \(error.localizedDescription)")
+                // Continue even if RevenueCat deletion fails
+            }
+
+            // 4. Delete the user's auth account
+            // This is typically done via an admin API call or RPC function
+            // as regular users cannot delete their own auth account directly.
+            // You'll need to set up an RPC function in Supabase for this.
+            do {
+                try await supabase.rpc("delete_user").execute()
+            } catch {
+                print("Failed to delete auth account via RPC: \(error.localizedDescription)")
+                // If RPC fails, we still sign out the user
+            }
+
+            // 5. Sign out the user
+            try? await supabase.auth.signOut()
+            await revenueCatManager.signOut()
+
+            // 6. Clear local state
+            profile = nil
+            profileImageURL = nil
+
+            // 7. Post notification to update the UI
+            NotificationCenter.default.post(name: .userDidSignOut, object: nil)
+
+        } catch {
+            errorMessage = "Failed to delete account: \(error.localizedDescription)"
+            isDeletingAccount = false
+            return
+        }
+
+        isDeletingAccount = false
     }
 }
