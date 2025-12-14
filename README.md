@@ -204,6 +204,7 @@ COMMENT ON FUNCTION delete_user() IS 'Allows authenticated users to delete their
  - [Get the Repo](https://github.com/proSamik/ios-app-landing-page)
 
 ## 9- App Store Screenshot Templates
+- Export the screenshots in jpeg or jpg (PNG are not supported)
 - [Figma File](https://www.figma.com/design/UaBl3FLxrqklXVdtdNNHfg/500--App-store-screenshot-templates--for-Android-and-iOS-apps---Community-?node-id=2010-23&t=fhKvHWqXLPoirfvY-1)
 ---
 
