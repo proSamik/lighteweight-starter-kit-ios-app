@@ -200,6 +200,8 @@ COMMENT ON FUNCTION delete_user() IS 'Allows authenticated users to delete their
 <img width="1185" height="814" alt="Screenshot 2025-12-02 at 22 38 20" src="https://github.com/user-attachments/assets/1231e589-227f-4bac-a65f-e4578d189959" />
 
 
+## 8- Landing Page (starter kit)
+ - [Get the Repo](https://github.com/proSamik/ios-app-landing-page)
 ---
 
 ## Issues?
