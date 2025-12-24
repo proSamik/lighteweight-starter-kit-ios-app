@@ -8,7 +8,7 @@
 	</array>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.prosamik.swipephotosapp</string>
+		<string>group.com.manan.OneNada.app</string>
 	</array>
 </dict>
 </plist>

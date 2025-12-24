@@ -13,7 +13,7 @@ class RevenueCatManager: NSObject, ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     
-    private let entitlementID = "plus" // Your entitlement ID from dashboard
+    private let entitlementID = "OneNada Pro" // Your entitlement ID from dashboard
     
     private override init() {
         super.init()

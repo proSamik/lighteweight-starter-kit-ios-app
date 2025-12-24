@@ -360,7 +360,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DT7N3X7L4B;
+				DEVELOPMENT_TEAM = 3HY3V85QV3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SwipePhotosExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = SwipePhotosExtension;
@@ -372,7 +372,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.prosamik.swipephotosapp.SwipePhotosExtension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.manan.OneNada.app.Extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -391,7 +391,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DT7N3X7L4B;
+				DEVELOPMENT_TEAM = 3HY3V85QV3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SwipePhotosExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = SwipePhotosExtension;
@@ -403,7 +403,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.prosamik.swipephotosapp.SwipePhotosExtension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.manan.OneNada.app.Extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -548,7 +548,7 @@
 				CODE_SIGN_ENTITLEMENTS = SwipePhotos/SwipePhotos.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DT7N3X7L4B;
+				DEVELOPMENT_TEAM = 3HY3V85QV3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SwipePhotos/Info.plist;
@@ -566,7 +566,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.prosamik.swipephotosapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.manan.OneNada.app;
 				PRODUCT_NAME = "Swipe Photos";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -586,7 +586,7 @@
 				CODE_SIGN_ENTITLEMENTS = SwipePhotos/SwipePhotos.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DT7N3X7L4B;
+				DEVELOPMENT_TEAM = 3HY3V85QV3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SwipePhotos/Info.plist;
@@ -604,7 +604,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.prosamik.swipephotosapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.manan.OneNada.app;
 				PRODUCT_NAME = "Swipe Photos";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;

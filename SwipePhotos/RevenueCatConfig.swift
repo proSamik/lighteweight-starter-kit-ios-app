@@ -2,7 +2,7 @@ import Foundation
 import RevenueCat
 
 // MARK: - RevenueCat Configuration
-let revenueCatPublicKey = "test_CHawOtfsUmPKzCENHDQKzWICwvS"
+let revenueCatPublicKey = "appl_ZpZFtbVOlJKYwPRDzXntgxqdySv"
 
 // Initialize RevenueCat
 func initializeRevenueCat() {

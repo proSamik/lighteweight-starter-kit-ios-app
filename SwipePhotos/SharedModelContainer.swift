@@ -23,7 +23,7 @@ class SharedModelContainer {
         let schema = Schema([PhotoModel.self])
         let modelConfiguration = ModelConfiguration(
             schema: schema,
-            groupContainer: .identifier("group.com.prosamik.swipephotosapp")
+            groupContainer: .identifier("group.com.manan.OneNada.app")
         )
 
         do {
