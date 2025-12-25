@@ -1,7 +1,6 @@
 import SwiftUI
 import Supabase
 import StoreKit
-import LocalAuthentication
 
 struct ProfileView: View {
     @EnvironmentObject var revenueCatManager: RevenueCatManager
@@ -10,13 +9,6 @@ struct ProfileView: View {
     @State var errorMessage: String?
     @AppStorage("hasUserReviewedApp") private var hasUserReviewedApp: Bool = false
     @ObservedObject private var themeManager = ThemeManager.shared
-    @StateObject private var biometricAuthManager = BiometricAuthManager()
-    @StateObject private var pinManager = PINManager()
-    @AppStorage("isBiometricEnabled") private var isBiometricEnabled: Bool = false
-    @State private var showPINSetup = false
-    @State private var showPINVerification = false
-    @State private var showSecurityAlert = false
-    @State private var securityAlertMessage = ""
     @State private var showDeleteAccountAlert = false
     @State private var isDeletingAccount = false
     @State private var subscriptionTimer: Timer?
@@ -117,76 +109,6 @@ struct ProfileView: View {
                             .cornerRadius(10)
                         }
 
-                        // Security Settings
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Security")
-                                .font(.headline)
-                                .padding(.top)
-                            
-                            VStack(spacing: 12) {
-                                // Biometric Authentication Toggle
-                                if biometricAuthManager.canUseBiometrics() {
-                                    HStack {
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            HStack {
-                                                Image(systemName: biometricAuthManager.getBiometricType() == "Face ID" ? "faceid" : "touchid")
-                                                    .foregroundColor(.blue)
-                                                Text("\(biometricAuthManager.getBiometricType()) Authentication")
-                                                    .font(.body)
-                                            }
-                                            Text("Use biometric authentication with device passcode fallback")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
-                                        
-                                        Spacer()
-                                        
-                                        Toggle("", isOn: $isBiometricEnabled)
-                                            .onChange(of: isBiometricEnabled) { oldValue, newValue in
-                                                if newValue {
-                                                    enableBiometricAuth()
-                                                }
-                                            }
-                                    }
-                                    .padding(.vertical, 8)
-                                    
-                                    Divider()
-                                }
-                                
-                                // PIN Authentication Toggle
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        HStack {
-                                            Image(systemName: "key.fill")
-                                                .foregroundColor(.green)
-                                            Text("App PIN")
-                                                .font(.body)
-                                        }
-                                        Text("Set a 4-digit PIN for app-specific authentication")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    
-                                    Spacer()
-                                    
-                                    Toggle("", isOn: .init(
-                                        get: { pinManager.isPINEnabled },
-                                        set: { newValue in
-                                            if newValue {
-                                                showPINSetup = true
-                                            } else {
-                                                disablePIN()
-                                            }
-                                        }
-                                    ))
-                                }
-                                .padding(.vertical, 8)
-                            }
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .cornerRadius(10)
-                        }
-
                         Spacer()
 
                         // App Store Review Button
@@ -257,20 +179,6 @@ struct ProfileView: View {
                     await fetchProfile()
                 }
             }
-            .sheet(isPresented: $showPINSetup) {
-                PINSetupView(pinManager: pinManager)
-            }
-            .sheet(isPresented: $showPINVerification) {
-                PINVerificationView(pinManager: pinManager) {
-                    // Success action - disable PIN after verification
-                    disablePINAfterVerification()
-                }
-            }
-            .alert("Security", isPresented: $showSecurityAlert) {
-                Button("OK") { }
-            } message: {
-                Text(securityAlertMessage)
-            }
             .alert("Delete Account", isPresented: $showDeleteAccountAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive) {
@@ -324,25 +232,21 @@ struct ProfileView: View {
             }
         } catch is CancellationError {
             // Task was cancelled (common with pull-to-refresh), ignore silently
-            // Don't clear profile - keep existing data visible
         } catch {
             // Don't show error message for session missing - it's expected after sign out
             if error.localizedDescription.contains("sessionMissing") || error.localizedDescription.contains("Auth session is missing") {
                 profile = nil
             }
-            // For other errors, don't clear profile or show error on refresh
         }
 
         isLoading = false
     }
     
     private func openAppStoreReview() {
-        // Mark that user has reviewed the app (they clicked the review button)
         hasUserReviewedApp = true
         
         // TODO: Replace YOUR_APP_ID with your actual App Store ID when available
         guard let url = URL(string: "https://apps.apple.com/app/id1234567890?action=write-review") else { 
-            // Fallback to main App Store if review URL fails
             if let fallbackURL = URL(string: "https://apps.apple.com/") {
                 UIApplication.shared.open(fallbackURL)
             }
@@ -350,42 +254,9 @@ struct ProfileView: View {
         }
         UIApplication.shared.open(url)
     }
-    
-    // MARK: - Security Functions
-    
-    private func enableBiometricAuth() {
-        biometricAuthManager.authenticateWithDeviceOwner { success, error in
-            if success {
-                securityAlertMessage = "\(biometricAuthManager.getBiometricType()) authentication enabled successfully!"
-                showSecurityAlert = true
-            } else {
-                isBiometricEnabled = false
-                securityAlertMessage = "Failed to enable biometric authentication: \(error?.localizedDescription ?? "Unknown error")"
-                showSecurityAlert = true
-            }
-        }
-    }
-    
-    private func disablePIN() {
-        if pinManager.hasPIN() {
-            // Verify current PIN before disabling
-            showPINVerification = true
-        } else {
-            let success = pinManager.deletePIN()
-            securityAlertMessage = success ? "PIN disabled successfully!" : "Failed to disable PIN"
-            showSecurityAlert = true
-        }
-    }
-    
-    private func disablePINAfterVerification() {
-        let success = pinManager.deletePIN()
-        securityAlertMessage = success ? "PIN disabled successfully!" : "Failed to disable PIN"
-        showSecurityAlert = true
-    }
 
     // MARK: - Account Deletion
 
-    /// Deletes the user's account by calling the backend RPC function
     func deleteAccount() async {
         isDeletingAccount = true
         errorMessage = nil
@@ -416,10 +287,8 @@ struct ProfileView: View {
     // MARK: - Subscription Timer
     
     private func startSubscriptionTimer(from startDate: Date) {
-        // Update immediately
         updateElapsedTime(from: startDate)
         
-        // Then update every second
         subscriptionTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             updateElapsedTime(from: startDate)
         }
