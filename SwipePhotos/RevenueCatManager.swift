@@ -1,6 +1,7 @@
 import SwiftUI
 import RevenueCat
 import Combine
+import Supabase
 
 @MainActor
 class RevenueCatManager: NSObject, ObservableObject {
@@ -80,6 +81,8 @@ class RevenueCatManager: NSObject, ObservableObject {
             
             if !result.userCancelled {
                 await checkSubscriptionStatus()
+                // Update subscription start date in Supabase
+                await updateSubscriptionStartDate()
                 isLoading = false
                 return true
             } else {
@@ -90,6 +93,34 @@ class RevenueCatManager: NSObject, ObservableObject {
             errorMessage = error.localizedDescription
             isLoading = false
             return false
+        }
+    }
+    
+    // MARK: - Update Subscription Start Date
+    /// Updates the subscription_started_at field in Supabase when subscription is activated
+    func updateSubscriptionStartDate() async {
+        do {
+            let user = try await supabase.auth.user()
+            
+            // Only update if not already set
+            let existingProfiles: [UserProfile] = try await supabase
+                .from("profiles")
+                .select()
+                .eq("id", value: user.id.uuidString)
+                .execute()
+                .value
+            
+            if let profile = existingProfiles.first, profile.subscriptionStartedAt == nil {
+                try await supabase
+                    .from("profiles")
+                    .update(["subscription_started_at": ISO8601DateFormatter().string(from: Date())])
+                    .eq("id", value: user.id.uuidString)
+                    .execute()
+                
+                print("✅ Subscription start date updated in Supabase")
+            }
+        } catch {
+            print("Failed to update subscription start date: \(error.localizedDescription)")
         }
     }
     

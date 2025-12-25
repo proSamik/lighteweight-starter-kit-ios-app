@@ -3,30 +3,6 @@ import AuthenticationServices
 import Supabase
 import RevenueCat
 
-struct ProfileInsert: Codable {
-    let id: String
-    let email: String
-    let name: String?
-    let profileImageUrl: String?
-    
-    enum CodingKeys: String, CodingKey {
-        case id
-        case email
-        case name
-        case profileImageUrl = "profile_image_url"
-    }
-}
-
-struct ProfileUpdate: Codable {
-    let name: String?
-    let profileImageUrl: String?
-    
-    enum CodingKeys: String, CodingKey {
-        case name
-        case profileImageUrl = "profile_image_url"
-    }
-}
-
 struct AuthView: View {
     @State var isSignedIn = false
     @State var user: User?
@@ -134,8 +110,8 @@ struct AuthView: View {
                 )
             )
             
-            // Update user profile with full name from Apple
-            await updateAppleUserProfile(credential: credential)
+            // Profile is auto-created by database trigger, just handle post sign-in
+            await handlePostSignIn()
             
         } catch {
             errorMessage = "Sign in failed: \(error.localizedDescription)"
@@ -161,78 +137,9 @@ struct AuthView: View {
             errorMessage = "Failed to get user: \(error.localizedDescription)"
         }
     }
-    
-    @MainActor
-    private func updateAppleUserProfile(credential: ASAuthorizationAppleIDCredential) async {
-        await handlePostSignIn()
-        await ensureProfileExists(credential: credential)
-    }
-    
-    private func ensureProfileExists(credential: ASAuthorizationAppleIDCredential? = nil) async {
-        do {
-            let currentUser = try await supabase.auth.user()
-            print("Checking profile for user: \(currentUser.id.uuidString)")
-            
-            let existingProfiles: [UserProfile] = try await supabase
-                .from("profiles")
-                .select()
-                .eq("id", value: currentUser.id.uuidString)
-                .execute()
-                .value
-            
-            if existingProfiles.isEmpty {
-                print("No profile found, creating one...")
-                await createProfileManually(user: currentUser, credential: credential)
-            } else {
-                print("Profile already exists")
-            }
-            
-        } catch {
-            print("Error checking/creating profile: \(error.localizedDescription)")
-        }
-    }
-    
-    private func createProfileManually(user: User, credential: ASAuthorizationAppleIDCredential? = nil) async {
-        do {
-            var name: String? = nil
-            
-            if let credential = credential, let fullName = credential.fullName {
-                var nameParts: [String] = []
-                if let givenName = fullName.givenName {
-                    nameParts.append(givenName)
-                }
-                if let middleName = fullName.middleName {
-                    nameParts.append(middleName)
-                }
-                if let familyName = fullName.familyName {
-                    nameParts.append(familyName)
-                }
-                let fullNameString = nameParts.joined(separator: " ")
-                if !fullNameString.isEmpty {
-                    name = fullNameString
-                }
-            }
-            
-            let newProfile = ProfileInsert(
-                id: user.id.uuidString,
-                email: user.email ?? "",
-                name: name,
-                profileImageUrl: nil
-            )
-            
-            try await supabase
-                .from("profiles")
-                .insert(newProfile)
-                .execute()
-            
-            print("Profile created successfully")
-            
-        } catch {
-            print("Failed to create profile manually: \(error.localizedDescription)")
-        }
-    }
 }
 
 #Preview {
     AuthView()
 }
+

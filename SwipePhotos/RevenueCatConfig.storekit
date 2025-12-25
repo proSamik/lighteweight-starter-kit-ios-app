@@ -21,6 +21,9 @@
     "_askToBuyEnabled" : false,
     "_billingGracePeriodEnabled" : false,
     "_billingIssuesEnabled" : false,
+    "_compatibilityTimeRate" : {
+      "3" : 6
+    },
     "_developerTeamID" : "3HY3V85QV3",
     "_disableDialogs" : false,
     "_failTransactionsEnabled" : false,
@@ -31,7 +34,7 @@
     "_storeKitErrors" : [
 
     ],
-    "_timeRate" : 0
+    "_timeRate" : 15
   },
   "subscriptionGroups" : [
     {
