@@ -99,8 +99,10 @@ class RevenueCatManager: NSObject, ObservableObject {
     // MARK: - Update Subscription Start Date
     /// Updates the subscription_started_at field in Supabase when subscription is activated
     func updateSubscriptionStartDate() async {
+        print("📝 updateSubscriptionStartDate() called")
         do {
             let user = try await supabase.auth.user()
+            print("📝 Got user ID: \(user.id.uuidString)")
             
             // Only update if not already set
             let existingProfiles: [UserProfile] = try await supabase
@@ -110,17 +112,28 @@ class RevenueCatManager: NSObject, ObservableObject {
                 .execute()
                 .value
             
-            if let profile = existingProfiles.first, profile.subscriptionStartedAt == nil {
-                try await supabase
-                    .from("profiles")
-                    .update(["subscription_started_at": ISO8601DateFormatter().string(from: Date())])
-                    .eq("id", value: user.id.uuidString)
-                    .execute()
+            print("📝 Found \(existingProfiles.count) profile(s)")
+            
+            if let profile = existingProfiles.first {
+                print("📝 Profile subscriptionStartedAt: \(String(describing: profile.subscriptionStartedAt))")
                 
-                print("✅ Subscription start date updated in Supabase")
+                if profile.subscriptionStartedAt == nil {
+                    print("📝 Attempting to update subscription_started_at...")
+                    try await supabase
+                        .from("profiles")
+                        .update(["subscription_started_at": ISO8601DateFormatter().string(from: Date())])
+                        .eq("id", value: user.id.uuidString)
+                        .execute()
+                    
+                    print("✅ Subscription start date updated in Supabase")
+                } else {
+                    print("📝 subscription_started_at already set, skipping update")
+                }
+            } else {
+                print("⚠️ No profile found for user!")
             }
         } catch {
-            print("Failed to update subscription start date: \(error.localizedDescription)")
+            print("❌ Failed to update subscription start date: \(error)")
         }
     }
     

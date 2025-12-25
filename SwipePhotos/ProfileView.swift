@@ -251,6 +251,12 @@ struct ProfileView: View {
             .refreshable {
                 await fetchProfile()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .subscriptionDidComplete)) { _ in
+                // Refetch profile to get updated subscription_started_at
+                Task {
+                    await fetchProfile()
+                }
+            }
             .sheet(isPresented: $showPINSetup) {
                 PINSetupView(pinManager: pinManager)
             }
@@ -279,7 +285,10 @@ struct ProfileView: View {
     }
 
     func fetchProfile() async {
-        isLoading = true
+        // Only show loading indicator if no profile is loaded yet
+        if profile == nil {
+            isLoading = true
+        }
         errorMessage = nil
 
         do {
@@ -313,13 +322,15 @@ struct ProfileView: View {
                     errorMessage = "Profile not found. Please try again."
                 }
             }
+        } catch is CancellationError {
+            // Task was cancelled (common with pull-to-refresh), ignore silently
+            // Don't clear profile - keep existing data visible
         } catch {
             // Don't show error message for session missing - it's expected after sign out
             if error.localizedDescription.contains("sessionMissing") || error.localizedDescription.contains("Auth session is missing") {
                 profile = nil
-            } else {
-                errorMessage = "Failed to load profile: \(error.localizedDescription)"
             }
+            // For other errors, don't clear profile or show error on refresh
         }
 
         isLoading = false

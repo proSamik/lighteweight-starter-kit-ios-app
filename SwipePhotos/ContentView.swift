@@ -5,6 +5,7 @@ import Supabase
 extension Notification.Name {
     static let userDidSignIn = Notification.Name("userDidSignIn")
     static let userDidSignOut = Notification.Name("userDidSignOut")
+    static let subscriptionDidComplete = Notification.Name("subscriptionDidComplete")
 }
 
 struct ContentView: View {

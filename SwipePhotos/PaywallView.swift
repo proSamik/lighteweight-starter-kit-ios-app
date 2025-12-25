@@ -22,6 +22,9 @@ struct SubscriptionPaywallView: View {
                         print("✅ Purchase completed successfully")
                         Task {
                             await revenueCatManager.checkSubscriptionStatus()
+                            await revenueCatManager.updateSubscriptionStartDate()
+                            // Notify ProfileView to refetch
+                            NotificationCenter.default.post(name: .subscriptionDidComplete, object: nil)
                         }
                         dismiss()
                     }
